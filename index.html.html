@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AN NHIEN BEAUTY - QUẢN LÝ THẺ KHÁCH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        baby: {
+                            DEFAULT: '#B9D6F3',
+                            light: '#E8F1FA',
+                            dark: '#8AB4F8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-baby-light min-h-full flex flex-col text-slate-700 antialiased selection:bg-baby-dark">
+
+    <header class="bg-baby text-slate-800 shadow-lg sticky top-0 z-50">
+        <div class="max-w-md mx-auto px-4 py-3.5">
+            <div class="flex justify-between items-center mb-3.5">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-white/40 backdrop-blur-md flex items-center justify-center text-slate-700 font-bold text-lg shadow-inner">🦋</div>
+                    <div>
+                        <h1 class="font-bold text-slate-800 text-base tracking-wide uppercase">AN NHIEN BEAUTY</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="setFilter('guide')" class="w-9 h-9 rounded-xl bg-white/40 hover:bg-white/60 flex items-center justify-center transition shadow-sm text-slate-700" title="Cấu hình Google Sheet">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+                    <button onclick="openAddCustomerModal()" class="bg-slate-800 text-baby font-bold text-xs px-3.5 py-2 rounded-xl shadow-md hover:bg-slate-700 transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        Thêm Khách
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3.5 bg-white/40 p-2.5 rounded-2xl backdrop-blur-sm border border-white/60">
+                <div class="text-center border-r border-slate-300/30">
+                    <span class="text-[10px] text-slate-600 font-medium tracking-wider uppercase block">Tổng khách hàng</span>
+                    <span class="text-lg font-extrabold text-slate-800" id="statTotalCust">0</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-[10px] text-slate-600 font-medium tracking-wider uppercase block">Khách VIP (>3tr)</span>
+                    <span class="text-lg font-extrabold text-amber-600" id="statVipCust">0</span>
+                </div>
+            </div>
+
+            <div class="flex bg-white/50 p-1 rounded-xl gap-1 mb-3.5 border border-white/60">
+                <button onclick="setFilter('all')" id="filterAllBtn" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-baby shadow-sm transition">Tất Cả</button>
+                <button onclick="setFilter('vip')" id="filterVipBtn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/50 transition">Khách VIP</button>
+                <button onclick="setFilter('guide')" id="filterGuideBtn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/50 transition">Kết Nối Sheet</button>
+            </div>
+
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" id="searchInput" oninput="renderCustomerList()" placeholder="Tìm tên hoặc SĐT khách hàng..." class="w-full pl-9 pr-4 py-2.5 text-xs bg-white/95 text-slate-800 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-800 shadow-inner font-medium">
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-md w-full mx-auto p-4 flex-grow space-y-3.5 pb-20">
+
+        <!-- Customer List Container -->
+        <div id="customerListContainer" class="space-y-3.5">
+            <!-- Dynamic Render -->
+        </div>
+
+        <!-- Google Sheet Guide & Config Container -->
+        <div id="guideContainer" class="hidden bg-white p-5 rounded-3xl shadow-sm border border-baby space-y-4">
+            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                <svg class="w-5 h-5 text-baby-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                Cấu hình Google Sheets
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Nhập đường dẫn Web App của Google Apps Script để tự động đồng bộ hóa danh sách khách hàng và dữ liệu tích điểm:
+            </p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps Script Web App:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby">
+                    <button onclick="saveScriptUrl()" class="bg-slate-800 hover:bg-slate-700 text-baby px-3.5 py-2 rounded-xl text-xs font-semibold transition">Lưu</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Mã Apps Script mẫu cho Google Sheet:</label>
+                <textarea readonly rows="6" class="w-full p-2.5 text-[11px] font-mono bg-slate-900 text-baby-light rounded-2xl focus:outline-none" onclick="this.select()">var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getSheetByName("Sheet1") || ss.getSheets()[0];
+function doGet(e) {
+  var rows = sheet.getDataRange().getValues();
+  var list = [];
+  for (var i = 1; i < rows.length; i++) {
+    list.push({phone:rows[i][0], name:rows[i][1], points:rows[i][2], totalSpent:rows[i][3], vip:rows[i][4], lastDate:rows[i][5], service:rows[i][6]});
+  }
+  return ContentService.createTextOutput(JSON.stringify(list)).setMimeType(ContentService.MimeType.JSON);
+}
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var rows = sheet.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(data.phone)) {
+      sheet.getRange(i+1, 2).setValue(data.name);
+      sheet.getRange(i+1, 3).setValue(data.points);
+      sheet.getRange(i+1, 4).setValue(data.totalSpent);
+      sheet.getRange(i+1, 5).setValue(data.vip);
+      sheet.getRange(i+1, 6).setValue(data.lastDate);
+      sheet.getRange(i+1, 7).setValue(data.service);
+      return ContentService.createTextOutput(JSON.stringify({status:"success"})).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+  sheet.appendRow([data.phone, data.name, data.points, data.totalSpent, data.vip, data.lastDate, data.service]);
+  return ContentService.createTextOutput(JSON.stringify({status:"success"})).setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="addCustomerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 animate-scale">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <svg class="w-5 h-5 text-baby-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Thêm Khách Hàng Mới
+                </h3>
+                <button onclick="closeModal('addCustomerModal')" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số điện thoại (*):</label>
+                    <input type="tel" id="modalPhone" placeholder="Ví dụ: 0886694095" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Họ tên khách hàng (*):</label>
+                    <input type="text" id="modalName" placeholder="Ví dụ: Chị An Nhiên" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Tiền dịch vụ (VNĐ):</label>
+                        <input type="text" id="modalMoney" oninput="formatCurrencyInput(this)" placeholder="350.000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Ngày đến:</label>
+                        <input type="date" id="modalDate" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-xs bg-white font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Kiểu làm / Dịch vụ:</label>
+                    <input type="text" id="modalService" placeholder="Ví dụ: Nối mi Classic, Nail box..." value="Nối mi" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số ô tích ban đầu:</label>
+                    <input type="number" id="modalPoints" value="1" min="1" max="10" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModal('addCustomerModal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-semibold transition text-xs">Hủy</button>
+                <button onclick="saveNewCustomer()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-baby py-3 rounded-xl font-semibold shadow-md shadow-slate-200 transition text-xs">Tạo Thẻ Mới</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 animate-scale">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <svg class="w-5 h-5 text-baby-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Check-in Lần Đến Mới
+                </h3>
+                <button onclick="closeModal('checkinModal')" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <p class="font-semibold text-slate-800 bg-baby-light p-2.5 rounded-xl border border-baby" id="checkinCustomerTitle">Khách hàng: </p>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Số ô tích thêm:</label>
+                        <input type="number" id="checkinAddPts" value="1" min="1" max="10" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Ngày đến:</label>
+                        <input type="date" id="checkinDate" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-xs bg-white font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số tiền thanh toán (VNĐ):</label>
+                    <input type="text" id="checkinMoney" oninput="formatCurrencyInput(this)" placeholder="Ví dụ: 250.000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Kiểu làm / Dịch vụ mới:</label>
+                    <input type="text" id="checkinService" placeholder="Ví dụ: Dặm mi Volume" value="Dặm mi" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-baby text-sm font-medium">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModal('checkinModal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-semibold transition text-xs">Hủy</button>
+                <button onclick="saveCheckin()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-baby py-3 rounded-xl font-semibold shadow-md shadow-slate-200 transition text-xs">Xác Nhận Check-in</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+        let activeCheckinPhone = null;
+        let scriptUrl = localStorage.getItem("anhnhien_script_url") || "";
+        document.getElementById("scriptUrlInput").value = scriptUrl;
+
+        let customers = JSON.parse(localStorage.getItem("anhnhien_customers_db") || JSON.stringify([
+            {
+                phone: "0886694095",
+                name: "Chị An Nhiên",
+                points: 6,
+                totalSpent: 3500000,
+                lastDate: "2026-09-14",
+                service: "Nối mi Doyin",
+                vip: "VIP"
+            },
+            {
+                phone: "0949427275",
+                name: "Chị Minh Thư",
+                points: 4,
+                totalSpent: 1200000,
+                lastDate: "2026-09-12",
+                service: "Dặm mi",
+                vip: "Thường"
+            }
+        ]));
+
+        document.getElementById("modalDate").valueAsDate = new Date();
+        document.getElementById("checkinDate").valueAsDate = new Date();
+
+        function saveToStorage() {
+            localStorage.setItem("anhnhien_customers_db", JSON.stringify(customers));
+            syncToGoogleSheet();
+        }
+
+        function formatCurrencyInput(input) {
+            let value = input.value.replace(/\D/g, "");
+            if (!value) {
+                input.value = "";
+                return;
+            }
+            input.value = Number(value).toLocaleString("vi-VN");
+        }
+
+        function parseCurrencyValue(valStr) {
+            if (!valStr) return 0;
+            return parseFloat(String(valStr).replace(/\./g, "")) || 0;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            const allBtn = document.getElementById("filterAllBtn");
+            const vipBtn = document.getElementById("filterVipBtn");
+            const guideBtn = document.getElementById("filterGuideBtn");
+            const listContainer = document.getElementById("customerListContainer");
+            const guideContainer = document.getElementById("guideContainer");
+
+            allBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/50 transition";
+            vipBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/50 transition";
+            guideBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/50 transition";
+
+            if (filter === 'all') {
+                allBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-baby shadow-sm transition";
+                listContainer.classList.remove("hidden");
+                guideContainer.classList.add("hidden");
+            } else if (filter === 'vip') {
+                vipBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-baby shadow-sm transition";
+                listContainer.classList.remove("hidden");
+                guideContainer.classList.add("hidden");
+            } else if (filter === 'guide') {
+                guideBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-baby shadow-sm transition";
+                listContainer.classList.add("hidden");
+                guideContainer.classList.remove("hidden");
+            }
+            renderCustomerList();
+        }
+
+        function saveScriptUrl() {
+            scriptUrl = document.getElementById("scriptUrlInput").value.trim();
+            localStorage.setItem("anhnhien_script_url", scriptUrl);
+            showNotification("Đã lưu URL kết nối Google Sheet thành công!");
+        }
+
+        function syncToGoogleSheet() {
+            if (!scriptUrl) return;
+            customers.forEach(cust => {
+                fetch(scriptUrl, {
+                    method: "POST",
+                    body: JSON.stringify(cust)
+                }).catch(e => console.log(e));
+            });
+        }
+
+        function openAddCustomerModal() {
+            document.getElementById("modalPhone").value = "";
+            document.getElementById("modalName").value = "";
+            document.getElementById("modalMoney").value = "";
+            document.getElementById("modalService").value = "Nối mi";
+            document.getElementById("modalPoints").value = "1";
+            document.getElementById("modalDate").valueAsDate = new Date();
+            document.getElementById("addCustomerModal").classList.remove("hidden");
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add("hidden");
+        }
+
+        function saveNewCustomer() {
+            const phone = document.getElementById("modalPhone").value.trim();
+            const name = document.getElementById("modalName").value.trim();
+            const money = parseCurrencyValue(document.getElementById("modalMoney").value);
+            const date = document.getElementById("modalDate").value;
+            const service = document.getElementById("modalService").value.trim() || "Nối mi";
+            const points = parseInt(document.getElementById("modalPoints").value) || 1;
+
+            if (!phone || !name) {
+                showNotification("Vui lòng điền Số điện thoại và Tên khách hàng!");
+                return;
+            }
+
+            if (customers.some(c => c.phone === phone)) {
+                showNotification("Số điện thoại này đã tồn tại trong hệ thống!");
+                return;
+            }
+
+            const vipStatus = money > 3000000 ? "VIP" : "Thường";
+            customers.unshift({
+                phone, name, points, totalSpent: money, lastDate: date, service, vip: vipStatus
+            });
+
+            saveToStorage();
+            closeModal('addCustomerModal');
+            showNotification("Đã thêm khách hàng mới thành công!");
+            renderCustomerList();
+        }
+
+        function openCheckinModal(phone) {
+            activeCheckinPhone = phone;
+            const cust = customers.find(c => c.phone === phone);
+            if (!cust) return;
+
+            document.getElementById("checkinCustomerTitle").innerText = `Khách hàng: ${cust.name} (${cust.phone})`;
+            document.getElementById("checkinAddPts").value = "1";
+            document.getElementById("checkinMoney").value = "";
+            document.getElementById("checkinService").value = "Dặm mi";
+            document.getElementById("checkinDate").valueAsDate = new Date();
+            document.getElementById("checkinModal").classList.remove("hidden");
+        }
+
+        function saveCheckin() {
+            const cust = customers.find(c => c.phone === activeCheckinPhone);
+            if (!cust) return;
+
+            const addPts = parseInt(document.getElementById("checkinAddPts").value) || 0;
+            const money = parseCurrencyValue(document.getElementById("checkinMoney").value);
+            const date = document.getElementById("checkinDate").value;
+            const service = document.getElementById("checkinService").value.trim() || "Dặm mi";
+
+            cust.points += addPts;
+            cust.totalSpent += money;
+            cust.lastDate = date;
+            if (service) cust.service = service;
+            if (cust.totalSpent > 3000000) cust.vip = "VIP";
+
+            saveToStorage();
+            closeModal('checkinModal');
+            showNotification("Check-in tích điểm thành công!");
+            renderCustomerList();
+        }
+
+        function renderCustomerList() {
+            const container = document.getElementById("customerListContainer");
+            const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
+
+            document.getElementById("statTotalCust").innerText = customers.length;
+            document.getElementById("statVipCust").innerText = customers.filter(c => c.totalSpent > 3000000 || c.vip === "VIP").length;
+
+            let filtered = customers.filter(c => {
+                const matchSearch = c.name.toLowerCase().includes(searchVal) || c.phone.includes(searchVal);
+                if (currentFilter === 'vip') {
+                    return matchSearch && (c.totalSpent > 3000000 || c.vip === "VIP");
+                }
+                return matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-8 rounded-3xl text-center text-slate-400 shadow-sm border border-baby">
+                        <p class="text-xs font-medium">Không tìm thấy khách hàng nào.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = "";
+            filtered.forEach(cust => {
+                const isVip = cust.totalSpent > 3000000 || cust.vip === "VIP";
+                if (isVip) cust.vip = "VIP";
+
+                let vong = Math.floor((cust.points - 1) / 10) + 1;
+
+                let cardDiv = document.createElement("div");
+                cardDiv.className = "bg-white p-4 rounded-3xl shadow-sm border border-baby space-y-3 relative overflow-hidden transition hover:shadow-md";
+                
+                if (isVip) {
+                    cardDiv.classList.add("border-amber-200", "bg-gradient-to-br", "from-white", "via-white", "to-amber-50/30");
+                }
+
+                let headerHtml = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-slate-800 text-sm">${cust.name}</h3>
+                                ${isVip ? '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">VIP</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5 font-medium">
+                                <span>📞 ${cust.phone}</span>
+                                <span>📅 ${cust.lastDate || 'Chưa cập nhật'}</span>
+                            </div>
+                        </div>
+                        <button onclick="openCheckinModal('${cust.phone}')" class="bg-slate-800 hover:bg-slate-700 text-baby font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-md shadow-slate-200 transition flex items-center gap-1">
+                            + Check-in
+                        </button>
+                    </div>
+                `;
+
+                let boxesHtml = `<div class="grid grid-cols-10 gap-1.5 pt-1">`;
+                for (let i = 1; i <= 10; i++) {
+                    const isChecked = i <= (cust.points % 10 === 0 && cust.points > 0 ? 10 : cust.points % 10);
+                    const isSpecial = (i === 5 || i === 10);
+                    boxesHtml += `
+                        <div class="h-9 rounded-xl flex flex-col items-center justify-center font-bold text-[11px] border transition-all ${
+                            isChecked 
+                                ? (isSpecial ? 'bg-slate-800 text-baby border-slate-800 shadow-xs' : 'bg-baby text-slate-800 border-baby')
+                                : 'bg-baby-light/50 text-slate-400 border-baby-light'
+                        }">
+                            <span>${i}</span>
+                            <span class="text-[8px] font-normal opacity-90">${i === 5 ? '5%' : (i === 10 ? '10%' : '')}</span>
+                        </div>
+                    `;
+                }
+                boxesHtml += `</div>`;
+
+                let infoBarHtml = `
+                    <div class="flex justify-between items-center text-xs pt-2 border-t border-baby-light font-medium">
+                        <span class="text-slate-500">Tổng chi: <strong class="text-slate-800 font-bold">${cust.totalSpent.toLocaleString()} đ</strong></span>
+                        <span class="text-slate-500">Dịch vụ: <strong class="text-slate-700 font-semibold">${cust.service || 'Chưa có'}</strong></span>
+                    </div>
+                `;
+
+                cardDiv.innerHTML = headerHtml + `
+                    <div class="bg-baby-light/40 p-3 rounded-2xl border border-baby-light space-y-2">
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600">
+                            <span>Thẻ tích điểm (Vòng ${vong})</span>
+                            <span class="text-slate-700">Còn ${5 - (cust.points % 5 === 0 ? 5 : cust.points % 5)} ô tới mốc</span>
+                        </div>
+                        ${boxesHtml}
+                    </div>
+                ` + infoBarHtml;
+
+                container.appendChild(cardDiv);
+            });
+        }
+
+        function showNotification(msg) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4.5 py-3 rounded-2xl shadow-xl z-[200] transition-all opacity-0";
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.style.opacity = '1', 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        renderCustomerList();
+    </script>
+</body>
+</html>
