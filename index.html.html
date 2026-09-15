@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="An Nhiên Beauty">
+    <title>An Nhiên Beauty - Quản Lý Tiệm Mi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#0ea5e9', // Xanh dương sang trọng
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-50/75 via-blue-50/40 to-slate-50/50 min-h-full flex flex-col text-slate-800 antialiased">
+
+    <header class="bg-white/80 backdrop-blur-xl border-b border-sky-100 sticky top-0 z-40">
+        <div class="max-w-xl mx-auto px-4 py-3.5 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 font-bold text-sm tracking-wider">AN</div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-base leading-tight">An Nhiên Beauty</h1>
+                    <p class="text-[11px] text-slate-500 font-medium">Hệ thống Tích Điểm & Google Sheet</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5" title="Cấu hình Google Sheet URL">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Cấu hình
+                </button>
+                <button onclick="openCheckinModal()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-md shadow-sky-600/20 transition-all flex items-center gap-1.5 active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Check-in Mới
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-xl w-full mx-auto p-4 flex-grow space-y-4">
+        
+        <!-- Trạng thái đồng bộ -->
+        <div id="syncStatusBox" class="bg-sky-50/80 border border-sky-200/80 rounded-2xl p-3 text-xs flex justify-between items-center text-sky-900 hidden">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span>
+                <span id="syncStatusText">Đang đồng bộ với Google Sheet...</span>
+            </div>
+            <button onclick="loadCustomersFromSheet()" class="text-sky-700 font-bold underline hover:text-sky-900">Tải lại</button>
+        </div>
+
+        <!-- Tổng quan số liệu -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-sky-100/80 shadow-sm flex flex-col justify-between">
+                <span class="text-xs text-slate-500 font-medium">Tổng khách hàng</span>
+                <span id="totalCustCount" class="text-2xl font-bold text-slate-900 tracking-tight mt-1">0</span>
+            </div>
+            <div class="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-sky-100/80 shadow-sm flex flex-col justify-between">
+                <span class="text-xs text-slate-500 font-medium">Khách VIP (> 3 Triệu)</span>
+                <span id="totalVipCount" class="text-2xl font-bold text-amber-600 tracking-tight mt-1">0</span>
+            </div>
+        </div>
+
+        <!-- Thanh tìm kiếm -->
+        <div class="bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-sky-100/80">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" id="searchInput" oninput="renderCustomerList()" placeholder="Tìm theo tên hoặc số điện thoại..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-xs font-medium bg-slate-50/50 transition-all">
+            </div>
+        </div>
+
+        <!-- Danh sách thẻ khách hàng -->
+        <div class="space-y-3" id="customerListContainer">
+            <!-- Render bằng JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Modal Cấu Hình Google Sheet URL -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Kết nối Google Sheet Web App</h3>
+                <button onclick="closeModal('configModal')" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-sm transition">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <p class="text-slate-600">Đường dẫn Web App URL kết nối:</p>
+                <div>
+                    <input type="text" id="modalSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-mono text-[11px]">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModal('configModal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl font-semibold transition text-xs">Hủy</button>
+                <button onclick="saveSheetConfig()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl font-semibold shadow-md shadow-sky-600/20 transition text-xs">Lưu & Kết Nối</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Check-in -->
+    <div id="checkinModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Check-in / Tích điểm khách hàng</h3>
+                <button onclick="closeModal('checkinModal')" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-sm transition">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số điện thoại (Không bắt buộc):</label>
+                    <input type="tel" id="modalPhone" placeholder="Ví dụ: 0912345678" onblur="lookupCustomerByPhone(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Họ tên khách hàng (*):</label>
+                    <input type="text" id="modalName" placeholder="Ví dụ: Chị Lan Mi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Số tiền thanh toán:</label>
+                        <input type="text" id="modalMoney" placeholder="350.000" oninput="formatCurrencyInput(this)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Ngày làm:</label>
+                        <input type="date" id="modalDate" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Dịch vụ thực hiện:</label>
+                    <select id="modalService" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white font-medium">
+                        <option value="Nối mi thiết kế">Nối mi thiết kế</option>
+                        <option value="Nối mi Volume">Nối mi Volume</option>
+                        <option value="Nối mi Classic">Nối mi Classic</option>
+                        <option value="Dặm mi">Dặm mi</option>
+                        <option value="Uốn mi / Khác">Uốn mi / Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số ô tích điểm cộng thêm:</label>
+                    <input type="number" id="modalPoints" value="1" min="1" max="10" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModal('checkinModal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl font-semibold transition text-xs">Hủy</button>
+                <button onclick="saveCheckin()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl font-semibold shadow-md shadow-sky-600/20 transition text-xs">Lưu Check-in</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sửa Thông Tin -->
+    <div id="editCustomerModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Chỉnh sửa thông tin khách hàng</h3>
+                <button onclick="closeModal('editCustomerModal')" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-sm transition">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số điện thoại:</label>
+                    <input type="tel" id="editModalPhone" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Họ tên khách hàng (*):</label>
+                    <input type="text" id="editModalName" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Tổng tiền chi tiêu:</label>
+                        <input type="text" id="editModalMoney" oninput="formatCurrencyInput(this)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Ngày làm gần nhất:</label>
+                        <input type="date" id="editModalDate" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Dịch vụ:</label>
+                    <input type="text" id="editModalService" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Số ô tích điểm hiện tại:</label>
+                    <input type="number" id="editModalPoints" min="0" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 font-medium">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModal('editCustomerModal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl font-semibold transition text-xs">Hủy</button>
+                <button onclick="saveEditCustomer()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl font-semibold shadow-md shadow-sky-600/20 transition text-xs">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sheetUrl = localStorage.getItem("annhien_sheet_url_v2") || "https://script.google.com/macros/s/AKfycbzGSLCtaYl0_bqIM345fYBs2vOICJ6oBhuVZ_OhxWo_6l5Zkt_An_aXIiZCWAKbHPBlfw/exec";
+        let customers = JSON.parse(localStorage.getItem("annhien_standalone_customers_v2") || "[]");
+
+        document.getElementById("modalDate").valueAsDate = new Date();
+
+        window.onload = function() {
+            document.getElementById("modalSheetUrl").value = sheetUrl;
+            loadCustomersFromSheet();
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem("annhien_standalone_customers_v2", JSON.stringify(customers));
+        }
+
+        function openConfigModal() {
+            document.getElementById("modalSheetUrl").value = sheetUrl;
+            document.getElementById("configModal").classList.remove("hidden");
+        }
+
+        function saveSheetConfig() {
+            const url = document.getElementById("modalSheetUrl").value.trim();
+            if (!url) {
+                showNotification("Vui lòng nhập đường dẫn Google Sheet Web App URL!");
+                return;
+            }
+            sheetUrl = url;
+            localStorage.setItem("annhien_sheet_url_v2", sheetUrl);
+            closeModal('configModal');
+            showNotification("Đã lưu URL kết nối Google Sheet!");
+            loadCustomersFromSheet();
+        }
+
+        function loadCustomersFromSheet() {
+            if (!sheetUrl) return;
+            showSyncStatus("Đang đồng bộ dữ liệu từ Google Sheet...", "loading");
+
+            fetch(sheetUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        customers = data.map((item, index) => ({
+                            id: item.id || ('c_' + index),
+                            phone: item.phone && item.phone !== "Không có SĐT" ? item.phone : "",
+                            name: item.name || "Khách hàng",
+                            points: parseInt(item.points) || 0,
+                            totalSpent: parseFloat(item.totalSpent) || 0,
+                            vip: item.vip || (item.totalSpent > 3000000 ? "VIP" : "Thường"),
+                            lastDate: item.lastDate ? item.lastDate.substring(0, 10) : "",
+                            service: item.service || "Nối mi"
+                        }));
+                        saveToLocalStorage();
+                        renderCustomerList();
+                        hideSyncStatus();
+                        showNotification("Đồng bộ Google Sheet thành công!");
+                    } else {
+                        throw new Error("Định dạng dữ liệu không hợp lệ");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showSyncStatus("Lỗi kết nối Google Sheet. Đang hiển thị dữ liệu lưu cục bộ.", "error");
+                    renderCustomerList();
+                });
+        }
+
+        function showSyncStatus(msg, type) {
+            const box = document.getElementById("syncStatusBox");
+            const text = document.getElementById("syncStatusText");
+            text.innerText = msg;
+            box.classList.remove("hidden");
+            if (type === "error") {
+                box.className = "bg-rose-50 border border-rose-200 rounded-2xl p-3 text-xs flex justify-between items-center text-rose-900";
+            } else if (type === "warning") {
+                box.className = "bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs flex justify-between items-center text-amber-900";
+            } else {
+                box.className = "bg-sky-50 border border-sky-200 rounded-2xl p-3 text-xs flex justify-between items-center text-sky-900";
+            }
+        }
+
+        function hideSyncStatus() {
+            document.getElementById("syncStatusBox").classList.add("hidden");
+        }
+
+        function formatCurrencyInput(input) {
+            let value = input.value.replace(/\D/g, "");
+            if (!value) {
+                input.value = "";
+                return;
+            }
+            input.value = Number(value).toLocaleString("vi-VN");
+        }
+
+        function parseCurrencyValue(str) {
+            if (!str) return 0;
+            return parseInt(str.toString().replace(/\./g, "")) || 0;
+        }
+
+        function openCheckinModal() {
+            document.getElementById("modalPhone").value = "";
+            document.getElementById("modalName").value = "";
+            document.getElementById("modalMoney").value = "";
+            document.getElementById("modalPoints").value = "1";
+            document.getElementById("modalDate").valueAsDate = new Date();
+            document.getElementById("checkinModal").classList.remove("hidden");
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add("hidden");
+        }
+
+        function lookupCustomerByPhone(phone) {
+            if (!phone) return;
+            const found = customers.find(c => c.phone === phone);
+            if (found) {
+                document.getElementById("modalName").value = found.name;
+                showNotification(`Đã tìm thấy khách hàng cũ: ${found.name}`);
+            }
+        }
+
+        function saveCheckin() {
+            const name = document.getElementById("modalName").value.trim();
+            const phone = document.getElementById("modalPhone").value.trim();
+            const money = parseCurrencyValue(document.getElementById("modalMoney").value);
+            const date = document.getElementById("modalDate").value;
+            const service = document.getElementById("modalService").value;
+            const addPoints = parseInt(document.getElementById("modalPoints").value) || 1;
+
+            if (!name) {
+                showNotification("Vui lòng điền Tên khách hàng!");
+                return;
+            }
+
+            let existing = customers.find(c => (phone && c.phone === phone) || c.name.toLowerCase() === name.toLowerCase());
+
+            if (existing) {
+                existing.name = name;
+                if (phone) existing.phone = phone;
+                existing.points += addPoints;
+                existing.totalSpent += money;
+                existing.lastDate = date;
+                existing.service = service;
+                if (existing.totalSpent > 3000000) existing.vip = "VIP";
+            } else {
+                let newCust = {
+                    id: 'c_' + Math.random().toString(36).substr(2, 9),
+                    phone: phone || "",
+                    name,
+                    points: addPoints,
+                    totalSpent: money,
+                    lastDate: date,
+                    service,
+                    vip: money > 3000000 ? "VIP" : "Thường"
+                };
+                customers.unshift(newCust);
+            }
+
+            saveToLocalStorage();
+
+            if (sheetUrl) {
+                showSyncStatus("Đang đồng bộ giao dịch lên Google Sheet...", "loading");
+                fetch(sheetUrl, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        phone: phone || "Không có SĐT",
+                        name: name,
+                        addedPoints: addPoints,
+                        addedMoney: money,
+                        lastDate: date,
+                        service: service
+                    })
+                })
+                .then(res => res.json())
+                .then(resData => {
+                    hideSyncStatus();
+                    showNotification("Check-in & đồng bộ Google Sheet thành công!");
+                    loadCustomersFromSheet();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showNotification("Đã lưu cục bộ nhưng lỗi đồng bộ Google Sheet.");
+                    renderCustomerList();
+                });
+            } else {
+                showNotification("Check-in & tích điểm thành công!");
+                renderCustomerList();
+            }
+
+            closeModal('checkinModal');
+        }
+
+        let activeEditId = null;
+        function openEditCustomerModal(id) {
+            const cust = customers.find(c => c.id === id);
+            if (!cust) return;
+            activeEditId = id;
+
+            document.getElementById("editModalPhone").value = cust.phone || "";
+            document.getElementById("editModalName").value = cust.name;
+            document.getElementById("editModalMoney").value = cust.totalSpent ? cust.totalSpent.toLocaleString("vi-VN") : "";
+            document.getElementById("editModalDate").value = cust.lastDate || "";
+            document.getElementById("editModalService").value = cust.service || "Nối mi thiết kế";
+            document.getElementById("editModalPoints").value = cust.points || 0;
+
+            document.getElementById("editCustomerModal").classList.remove("hidden");
+        }
+
+        function saveEditCustomer() {
+            const cust = customers.find(c => c.id === activeEditId);
+            if (!cust) return;
+
+            const name = document.getElementById("editModalName").value.trim();
+            const phone = document.getElementById("editModalPhone").value.trim();
+            const money = parseCurrencyValue(document.getElementById("editModalMoney").value);
+            const date = document.getElementById("editModalDate").value;
+            const service = document.getElementById("editModalService").value.trim();
+            const points = parseInt(document.getElementById("editModalPoints").value) || 0;
+
+            if (!name) {
+                showNotification("Vui lòng không để trống tên khách hàng!");
+                return;
+            }
+
+            cust.name = name;
+            cust.phone = phone;
+            cust.totalSpent = money;
+            cust.lastDate = date;
+            cust.service = service;
+            cust.points = points;
+            cust.vip = cust.totalSpent > 3000000 ? "VIP" : "Thường";
+
+            saveToLocalStorage();
+            closeModal('editCustomerModal');
+            showNotification("Đã cập nhật thông tin khách hàng!");
+            renderCustomerList();
+        }
+
+        function deleteCustomer(id) {
+            const cust = customers.find(c => c.id === id);
+            if (!cust) return;
+
+            if (confirm(`Bạn có chắc muốn xóa khách hàng "${cust.name}" không?`)) {
+                customers = customers.filter(c => c.id !== id);
+                saveToLocalStorage();
+                showNotification("Đã xóa khách hàng!");
+                renderCustomerList();
+            }
+        }
+
+        function showNotification(msg) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-lg z-50 transition-all opacity-0 font-medium";
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.style.opacity = '1', 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        function renderCustomerList() {
+            const container = document.getElementById("customerListContainer");
+            const keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+            
+            container.innerHTML = "";
+
+            const filtered = customers.filter(c => 
+                c.name.toLowerCase().includes(keyword) || (c.phone && c.phone.toLowerCase().includes(keyword))
+            );
+
+            document.getElementById("totalCustCount").innerText = customers.length;
+            document.getElementById("totalVipCount").innerText = customers.filter(c => c.totalSpent > 3000000 || c.vip === "VIP").length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white/80 backdrop-blur-md p-8 rounded-2xl text-center border border-sky-100 text-slate-400 text-xs font-medium">
+                        Không tìm thấy khách hàng nào phù hợp.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(cust => {
+                const cardDiv = document.createElement("div");
+                cardDiv.className = "bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-sky-100/80 space-y-3 relative";
+
+                const isVip = cust.totalSpent > 3000000 || cust.vip === "VIP";
+                const vong = Math.floor(cust.points / 10) + 1;
+                const activeInVong = cust.points % 10 === 0 && cust.points > 0 ? 10 : cust.points % 10;
+
+                let headerHtml = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                ${cust.name}
+                                ${isVip ? '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-md">VIP</span>' : ''}
+                            </h3>
+                            <p class="text-[11px] text-slate-500 font-medium mt-0.5">SĐT: ${cust.phone || 'Không có SĐT'}</p>
+                        </div>
+                        <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">Ô: ${cust.points}</span>
+                    </div>
+                `;
+
+                let boxesHtml = `<div class="grid grid-cols-5 gap-1.5 mt-2">`;
+                for (let i = 1; i <= 10; i++) {
+                    const filled = i <= activeInVong;
+                    boxesHtml += `
+                        <div class="h-8 rounded-lg flex flex-col items-center justify-center font-bold text-[10px] border transition ${
+                            filled 
+                                ? (i === 5 || i === 10 ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-sky-500 text-white border-sky-500')
+                                : 'bg-sky-50/50 text-slate-400 border-sky-100'
+                        }">
+                            <span>${i}</span>
+                            <span class="text-[7px] font-normal opacity-90">${i === 5 ? '5%' : (i === 10 ? '10%' : '')}</span>
+                        </div>
+                    `;
+                }
+                boxesHtml += `</div>`;
+
+                let infoBarHtml = `
+                    <div class="flex justify-between items-center text-xs pt-2.5 border-t border-sky-100/60 font-medium">
+                        <span class="text-slate-500">Ngày làm: <strong class="text-sky-900 font-bold">${cust.lastDate || 'Chưa rõ'}</strong></span>
+                        <span class="text-slate-500">Dịch vụ: <strong class="text-slate-700 font-semibold">${cust.service || 'Nối mi'}</strong></span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs pt-1">
+                        <span class="text-slate-500">Tổng chi: <strong class="text-slate-900 font-bold">${cust.totalSpent.toLocaleString()} đ</strong></span>
+                        <div class="flex gap-2">
+                            <button onclick="openEditCustomerModal('${cust.id}')" class="text-slate-600 hover:text-sky-700 bg-slate-50 hover:bg-sky-50 border border-slate-200/80 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition">
+                                Sửa
+                            </button>
+                            <button onclick="deleteCustomer('${cust.id}')" class="text-rose-600 hover:text-rose-700 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition">
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                cardDiv.innerHTML = headerHtml + `
+                    <div class="bg-sky-50/30 p-2.5 rounded-xl border border-sky-100/50 space-y-1.5">
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600">
+                            <span>Thẻ tích điểm (Vòng ${vong})</span>
+                            <span class="text-sky-700 font-medium">Còn ${10 - activeInVong} ô tới mốc thưởng</span>
+                        </div>
+                        ${boxesHtml}
+                    </div>
+                ` + infoBarHtml;
+
+                container.appendChild(cardDiv);
+            });
+        }
+    </script>
+</body>
+</html>
